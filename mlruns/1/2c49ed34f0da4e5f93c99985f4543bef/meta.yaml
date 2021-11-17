@@ -1,0 +1,15 @@
+artifact_uri: file:///Users/philkolling/code/philkolling/TaxiFareModel/mlruns/1/2c49ed34f0da4e5f93c99985f4543bef/artifacts
+end_time: null
+entry_point_name: ''
+experiment_id: '1'
+lifecycle_stage: active
+name: ''
+run_id: 2c49ed34f0da4e5f93c99985f4543bef
+run_uuid: 2c49ed34f0da4e5f93c99985f4543bef
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1637070879932
+status: 1
+tags: []
+user_id: unknown

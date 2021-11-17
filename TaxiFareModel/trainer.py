@@ -7,6 +7,16 @@ from sklearn.model_selection import train_test_split
 from TaxiFareModel.encoders import DistanceTransformer, TimeFeaturesEncoder
 from TaxiFareModel.utils import compute_rmse
 from TaxiFareModel.data import clean_data, get_data
+import mlflow
+from mlflow.tracking import MlflowClient
+from memoized_property import memoized_property
+import ml_flow_test
+import joblib
+
+
+MLFLOW_URI = "https://mlflow.lewagon.co/"
+
+EXPERIMENT_NAME = "GER_MUC_phil_TaxiFareModel_1.0"
 
 
 class Trainer():
@@ -18,6 +28,7 @@ class Trainer():
         self.pipeline = None
         self.X = X
         self.y = y
+        self.experiment_name = EXPERIMENT_NAME
 
     def set_pipeline(self):
         dist_pipe = Pipeline([('dist_trans', DistanceTransformer()),
@@ -48,6 +59,41 @@ class Trainer():
         print(rmse)
         return rmse
 
+    @memoized_property
+    def mlflow_client(self):
+        mlflow.set_tracking_uri(MLFLOW_URI)
+        return MlflowClient()
+
+    @memoized_property
+    def mlflow_experiment_id(self):
+        try:
+            return self.mlflow_client.create_experiment(self.experiment_name)
+        except BaseException:
+            return self.mlflow_client.get_experiment_by_name(
+                self.experiment_name).experiment_id
+
+    @memoized_property
+    def mlflow_run(self):
+        return self.mlflow_client.create_run(self.mlflow_experiment_id)
+
+    def mlflow_log_param(self, key, value):
+        self.mlflow_client.log_param(self.mlflow_run.info.run_id, key, value)
+
+    def mlflow_log_metric(self, key, value):
+        self.mlflow_client.log_metric(self.mlflow_run.info.run_id, key, value)
+
+    def train(self):
+
+        for model in ["linear", "Randomforest"]:
+            self.mlflow_run()
+            self.mlflow_log_metric("rmse", 4.5)
+            self.mlflow_log_param("model", model)
+
+
+
+    def save_model(self):
+        """ Save the trained model into a model.joblib file """
+        joblib.dump(self.pipeline, 'model.joblib')
 
 if __name__ == "__main__":
     df = get_data()
@@ -58,4 +104,6 @@ if __name__ == "__main__":
     trainer = Trainer(X_train, y_train)
     trainer.run()
     result = trainer.evaluate(X_test, y_test)
+    trainer.train()
+    trainer.save_model()
     print('TODO')
